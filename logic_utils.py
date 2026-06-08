@@ -33,6 +33,11 @@ def parse_guess(raw: str):
 
 
 def check_guess(guess, secret):
+    # FIX: AI identified that the original function returned a tuple (outcome, message),
+    # causing hint tests to always fail and hint directions to be backwards.
+    # AI split this into check_guess (plain string) and get_hint_message (UI text),
+    # and corrected the arrow directions. Verified by running pytest and manually
+    # playing the game to confirm hints matched the actual secret number.
     """
     Compare guess to secret and return the outcome string only.
 
@@ -47,6 +52,8 @@ def check_guess(guess, secret):
 
 
 def get_hint_message(outcome: str) -> str:
+    # FIX: Separated from check_guess so the UI gets emoji text while
+    # tests can assert against a plain string. AI suggested this split.
     """Return an emoji hint message for display in the UI."""
     if outcome == "Win":
         return "🎉 Correct!"
@@ -56,9 +63,14 @@ def get_hint_message(outcome: str) -> str:
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int, attempt_limit: int):
+    # FIX: Original formula used attempt_number (attempts used) as the score,
+    # so winning on attempt 6 of 8 gave a score of 6 instead of 2.
+    # AI suggested the correct formula: attempt_limit - attempt_number (attempts remaining).
+    # Also added attempt_limit as a parameter since the function didn't previously
+    # receive it. Verified with pytest: update_score(0, "Win", 6, 8) == 2.
     """
-    Update score based on outcome and attempt number.
-    Score only increases on a win, by the number of attempts used.
+    Update score based on outcome and attempts remaining.
+    Score only increases on a win: points = attempt_limit - attempt_number.
     Score stays unchanged on a loss.
     """
     if outcome == "Win":
